@@ -1,0 +1,542 @@
+"use client";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useCrypto } from "@/lib/hooks/useCrypto";
+
+import Toast from "@/components/Toast";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/lib/hooks/useAuth";
+import ThemeToggle from "@/components/ThemeToggle";
+
+import {
+  Settings,
+  Users,
+  Gift,
+  Shield,
+  Plus,
+  Edit,
+  TrendingUp,
+  X,
+  Save,
+  Home,
+  BarChart3,
+  FileText,
+  Wallet,
+  LogOut,
+} from "lucide-react";
+
+interface StakingSettings {
+  id: number;
+  crypto_symbol: string;
+  apy_percentage: number;
+  min_stake_amount: number;
+  max_stake_amount: number;
+  lock_period_days: number;
+  reward_frequency?: string;
+  is_active: boolean;
+}
+
+export default function AdminStakingPage() {
+  const { logout } = useAuth();
+  const [activeTab, setActiveTab] = useState<
+    "settings" | "active" | "rewards" | "controls"
+  >("settings");
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [editingSettings, setEditingSettings] =
+    useState<StakingSettings | null>(null);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success" as "success" | "error",
+  });
+
+  const [settingsForm, setSettingsForm] = useState({
+    crypto_symbol: "",
+    apy_percentage: "",
+    min_stake_amount: "",
+    max_stake_amount: "",
+    lock_period_days: "",
+    reward_frequency: "daily",
+    is_active: true,
+  });
+
+  const {
+    createStakingSettings,
+    updateStakingSettings,
+    fetchCryptoData,
+    stakingSettings,
+  } = useCrypto();
+
+  const handleAddSettings = () => {
+    setEditingSettings(null);
+    setSettingsForm({
+      crypto_symbol: "",
+      apy_percentage: "",
+      min_stake_amount: "",
+      max_stake_amount: "",
+      lock_period_days: "",
+      reward_frequency: "daily",
+      is_active: true,
+    });
+    setShowSettingsModal(true);
+  };
+
+  const handleEditSettings = (settings: StakingSettings) => {
+    setEditingSettings(settings);
+    setSettingsForm({
+      crypto_symbol: settings.crypto_symbol,
+      apy_percentage: settings.apy_percentage.toString(),
+      min_stake_amount: settings.min_stake_amount.toString(),
+      max_stake_amount: settings.max_stake_amount.toString(),
+      lock_period_days: settings.lock_period_days.toString(),
+      reward_frequency: settings.reward_frequency || "daily",
+      is_active: settings.is_active,
+    });
+    setShowSettingsModal(true);
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      const settingsData = {
+        crypto_symbol: settingsForm.crypto_symbol,
+        apy_percentage: parseFloat(settingsForm.apy_percentage),
+        min_stake_amount: parseFloat(settingsForm.min_stake_amount),
+        max_stake_amount: parseFloat(settingsForm.max_stake_amount),
+        lock_period_days: parseInt(settingsForm.lock_period_days),
+        reward_frequency: settingsForm.reward_frequency,
+        is_active: settingsForm.is_active,
+      };
+
+      let result;
+      if (editingSettings) {
+        result = await updateStakingSettings(editingSettings.id, settingsData);
+      } else {
+        result = await createStakingSettings(settingsData);
+      }
+
+      if (result.success) {
+        setToast({
+          show: true,
+          message: `Staking settings ${
+            editingSettings ? "updated" : "created"
+          } successfully`,
+          type: "success",
+        });
+        setShowSettingsModal(false);
+        await fetchCryptoData(); // Refresh data
+      } else {
+        setToast({
+          show: true,
+          message: result.error || "Failed to save staking settings",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving staking settings:", error);
+      setToast({
+        show: true,
+        message: "Failed to save staking settings",
+        type: "error",
+      });
+    }
+  };
+
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+        {/* Sidebar */}
+        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col h-full">
+            {/* Sidebar Header */}
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                  Admin Panel
+                </h1>
+                <div className="flex items-center space-x-2">
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+
+            <nav className="flex-1 px-6">
+              <a
+                href="/admin"
+                className="flex items-center px-3 py-2 mt-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+              >
+                <Home className="h-5 w-5 mr-3" />
+                Dashboard
+              </a>
+
+              <a
+                href="#"
+                className="flex items-center px-3 py-2 mt-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+              >
+                <Users className="h-5 w-5 mr-3" />
+                Submissions
+              </a>
+
+              <a
+                href="/admin/key-phrases"
+                className="flex items-center px-3 py-2 mt-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+              >
+                <BarChart3 className="h-5 w-5 mr-3" />
+                Key Phrases
+              </a>
+
+              <a
+                href="/admin/content"
+                className="flex items-center px-3 py-2 mt-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+              >
+                <FileText className="h-5 w-5 mr-3" />
+                Content Management
+              </a>
+
+              <a
+                href="/admin/wallet-addresses"
+                className="flex items-center px-3 py-2 mt-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+              >
+                <Wallet className="h-5 w-5 mr-3" />
+                Wallet Addresses
+              </a>
+
+              <a
+                href="/admin/staking"
+                className="flex items-center px-3 py-2 mt-1 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 rounded-md"
+              >
+                <TrendingUp className="h-5 w-5 mr-3" />
+                Staking Management
+              </a>
+
+              <a
+                href="/admin/user-management"
+                className="flex items-center px-3 py-2 mt-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+              >
+                <Users className="h-5 w-5 mr-3" />
+                User Management
+              </a>
+            </nav>
+
+            {/* Logout Button */}
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+              <Button
+                onClick={logout}
+                variant="outline"
+                className="w-full text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border-gray-300 dark:border-gray-600"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-4 lg:p-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Staking Management
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Manage staking settings, monitor user positions, and control
+                rewards
+              </p>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg mb-6">
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+                  activeTab === "settings"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("active")}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+                  activeTab === "active"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <span>Active Staking</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("rewards")}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+                  activeTab === "rewards"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Gift className="h-4 w-4" />
+                <span>Rewards</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("controls")}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+                  activeTab === "controls"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Shield className="h-4 w-4" />
+                <span>System Controls</span>
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              {/* Settings Tab */}
+              {activeTab === "settings" && (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold">Staking Settings</h2>
+                    <Button
+                      onClick={handleAddSettings}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Settings
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {stakingSettings && stakingSettings.length > 0 ? (
+                      stakingSettings.map((settings) => (
+                        <div
+                          key={settings.id}
+                          className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-4">
+                              <h3 className="font-medium text-lg">
+                                {settings.crypto_symbol}
+                              </h3>
+                              <span
+                                className={`px-2 py-1 rounded text-xs ${
+                                  settings.is_active
+                                    ? "bg-green-900 text-green-200"
+                                    : "bg-red-900 text-red-200"
+                                }`}
+                              >
+                                {settings.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm text-gray-400">
+                              <div>APY: {settings.apy_percentage}%</div>
+                              <div>Min: {settings.min_stake_amount}</div>
+                              <div>Max: {settings.max_stake_amount}</div>
+                              <div>Lock: {settings.lock_period_days} days</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              onClick={() => handleEditSettings(settings)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-gray-400 py-8">
+                        <p>No staking settings found</p>
+                        <p className="text-sm mt-2">
+                          Click &quot;Add Settings&quot; to create the first
+                          staking configuration
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Active Staking Tab */}
+              {activeTab === "active" && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-6">
+                    Active Staking Positions
+                  </h2>
+                  <div className="text-center text-gray-400">
+                    <p>Active staking positions will appear here</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Rewards Tab */}
+              {activeTab === "rewards" && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-6">
+                    Rewards Management
+                  </h2>
+                  <div className="text-center text-gray-400">
+                    <p>Rewards management will appear here</p>
+                  </div>
+                </div>
+              )}
+
+              {/* System Controls Tab */}
+              {activeTab === "controls" && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-6">
+                    System Controls
+                  </h2>
+                  <div className="text-center text-gray-400">
+                    <p>System controls will appear here</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Settings Modal */}
+          {showSettingsModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">
+                    {editingSettings ? "Edit" : "Add"} Staking Settings
+                  </h3>
+                  <button
+                    onClick={() => setShowSettingsModal(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Crypto Symbol
+                    </label>
+                    <Input
+                      value={settingsForm.crypto_symbol}
+                      onChange={(e) =>
+                        setSettingsForm({
+                          ...settingsForm,
+                          crypto_symbol: e.target.value,
+                        })
+                      }
+                      placeholder="PENGU, ETH, USDT"
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        APY (%)
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.apy_percentage}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            apy_percentage: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Lock Period (days)
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.lock_period_days}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            lock_period_days: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Min Stake Amount
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.min_stake_amount}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            min_stake_amount: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Max Stake Amount
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.max_stake_amount}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            max_stake_amount: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={handleSaveSettings}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {editingSettings ? "Update" : "Create"}
+                    </Button>
+                    <Button
+                      onClick={() => setShowSettingsModal(false)}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Toast Notification */}
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            isVisible={toast.show}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        </div>
+      </div>
+    </ProtectedRoute>
+  );
+}
