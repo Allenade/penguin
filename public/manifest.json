@@ -1,0 +1,23 @@
+{
+  "name": "PENGU - The Future of Crypto",
+  "short_name": "PENGU",
+  "description": "Join the PENGU community and experience the future of cryptocurrency trading and staking.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "icons": [
+    {
+      "src": "/image/pengu.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/image/pengu.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

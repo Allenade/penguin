@@ -41,9 +41,6 @@ export default function DashboardLayout({
     { name: "Staking", icon: CircuitBoard, href: "/dashboard/staking" },
     { name: "Deposit", icon: Plus, href: "/dashboard/deposit" },
     { name: "Withdraw", icon: Minus, href: "/dashboard/withdraw" },
-    { name: "Buy PENGU", icon: Bitcoin, href: "/dashboard/buy-pengu" },
-    { name: "NFT Collection", icon: PictureFrame, href: "/dashboard/nft" },
-    { name: "Verify Account", icon: CheckCircle, href: "/dashboard/verify" },
   ];
 
   const isActiveRoute = (href: string) => {
