@@ -2,7 +2,6 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "ignoreCommand": "echo 'Skipping linting for deployment'",
   "functions": {
     "app/**/*.tsx": {
       "maxDuration": 30
