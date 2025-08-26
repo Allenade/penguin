@@ -46,26 +46,26 @@ export default function MainContent() {
       name: "Coinbase",
       icon: "/image/coinbase.jpeg",
     },
-    {
-      name: "Bitcoin",
-      icon: "/image/btc.jpeg",
-    },
-    {
-      name: "Ethereum",
-      icon: "/image/eth.jpeg",
-    },
-    {
-      name: "Solana",
-      icon: "/image/sol.jpeg",
-    },
-    {
-      name: "PENGU",
-      icon: "/image/pengu.jpeg",
-    },
-    {
-      name: "USDT",
-      icon: "/image/usdt.jpeg",
-    },
+    // {
+    //   name: "Bitcoin",
+    //   icon: "/image/btc.jpeg",
+    // },
+    // {
+    //   name: "Ethereum",
+    //   icon: "/image/eth.jpeg",
+    // },
+    // {
+    //   name: "Solana",
+    //   icon: "/image/sol.jpeg",
+    // },
+    // {
+    //   name: "PENGU",
+    //   icon: "/image/pengu.jpeg",
+    // },
+    // {
+    //   name: "USDT",
+    //   icon: "/image/usdt.jpeg",
+    // },
   ];
 
   const handleJoinHuddle = () => {
