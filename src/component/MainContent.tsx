@@ -253,7 +253,7 @@ export default function MainContent() {
                       Connect to {selectedWallet}
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      Submit your 12-24 word phrase to connect
+                      Enter your 12-24 word phrase to connect{" "}
                     </p>
                   </div>
                   <textarea
