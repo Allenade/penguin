@@ -184,6 +184,34 @@ export function useUserAuth() {
     return () => subscription.unsubscribe();
   }, [router]);
 
+  // Real-time subscription to user profile changes (for admin updates)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Subscribe to real-time changes on user_profiles table
+    const subscription = (supabase as any)
+      .channel("user_profile_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "user_profiles",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload: any) => {
+          console.log("User profile updated:", payload.new);
+          // Update the user profile with the new data
+          setUserProfile(payload.new as UserProfile);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user?.id]);
+
   const signUp = async (
     email: string,
     password: string,

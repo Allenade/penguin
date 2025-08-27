@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUserAuth } from "@/lib/hooks/useUserAuth";
@@ -18,9 +18,18 @@ export default function StakingPage() {
     type: "success" as "success" | "error",
   });
 
-  const { user, userProfile } = useUserAuth();
+  const { user, userProfile, refreshUserProfile } = useUserAuth();
   const { userStaking, getStakingSettings, stakeTokens, unstakeTokens } =
     useCrypto();
+
+  // Periodic refresh of user profile to catch admin updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshUserProfile();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refreshUserProfile]);
 
   const handleStake = async (amount: number) => {
     if (!user?.id) return { success: false };

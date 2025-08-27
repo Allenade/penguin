@@ -20,7 +20,7 @@ export default function DashboardPage() {
     type: "success" as "success" | "error",
   });
 
-  const { user, userProfile } = useUserAuth();
+  const { user, userProfile, refreshUserProfile } = useUserAuth();
   const router = useRouter();
   const {
     isLoading: cryptoLoading,
@@ -50,6 +50,17 @@ export default function DashboardPage() {
       fetchUserStaking(user.id);
     }
   }, [user?.id, fetchUserStaking]);
+
+  // Periodic refresh of user profile to catch admin updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const interval = setInterval(() => {
+      refreshUserProfile();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [user?.id, refreshUserProfile]);
 
   const handleClaimWelcomeBonus = async () => {
     if (!user?.id) return { success: false };

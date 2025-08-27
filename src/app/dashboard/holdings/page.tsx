@@ -1,13 +1,22 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useUserAuth } from "@/lib/hooks/useUserAuth";
 import { useCrypto } from "@/lib/hooks/useCrypto";
 
 import { Bitcoin, Zap, TrendingUp, DollarSign } from "lucide-react";
 
 export default function HoldingsPage() {
-  const { userProfile } = useUserAuth();
+  const { userProfile, refreshUserProfile } = useUserAuth();
   const { assets } = useCrypto();
+
+  // Periodic refresh of user profile to catch admin updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshUserProfile();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refreshUserProfile]);
 
   // Simple price management - we'll replace this with Supabase data later
   const getAssetPrice = (symbol: string): number => {
