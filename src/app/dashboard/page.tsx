@@ -243,6 +243,93 @@ export default function DashboardPage() {
         {/* Cryptocurrency Balances */}
         <div className="bg-gray-800 rounded-lg p-4">
           <div className="space-y-4">
+            {/* Bitcoin (BTC) */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-sm lg:text-base">
+                    Bitcoin
+                  </span>
+                  <span className="text-gray-400 text-xs lg:text-sm">BTC</span>
+                  <span className="text-base lg:text-lg font-bold">
+                    {(userProfile?.btc_balance || 0).toFixed(8)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex space-x-1 lg:space-x-2">
+                <Button
+                  onClick={() => router.push("/dashboard/deposit")}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
+                >
+                  Deposit
+                </Button>
+                <Button
+                  onClick={() => router.push("/dashboard/withdraw")}
+                  className="bg-gray-700 hover:bg-gray-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
+                >
+                  Withdraw
+                </Button>
+              </div>
+            </div>
+
+            {/* Ethereum (ETH) */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-sm lg:text-base">
+                    Ethereum
+                  </span>
+                  <span className="text-gray-400 text-xs lg:text-sm">ETH</span>
+                  <span className="text-base lg:text-lg font-bold">
+                    {(userProfile?.eth_balance || 0).toFixed(8)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex space-x-1 lg:space-x-2">
+                <Button
+                  onClick={() => router.push("/dashboard/deposit")}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
+                >
+                  Deposit
+                </Button>
+                <Button
+                  onClick={() => router.push("/dashboard/withdraw")}
+                  className="bg-gray-700 hover:bg-gray-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
+                >
+                  Withdraw
+                </Button>
+              </div>
+            </div>
+
+            {/* Solana (SOL) */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-sm lg:text-base">
+                    Solana
+                  </span>
+                  <span className="text-gray-400 text-xs lg:text-sm">SOL</span>
+                  <span className="text-base lg:text-lg font-bold">
+                    {(userProfile?.sol_balance || 0).toFixed(8)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex space-x-1 lg:space-x-2">
+                <Button
+                  onClick={() => router.push("/dashboard/deposit")}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
+                >
+                  Deposit
+                </Button>
+                <Button
+                  onClick={() => router.push("/dashboard/withdraw")}
+                  className="bg-gray-700 hover:bg-gray-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
+                >
+                  Withdraw
+                </Button>
+              </div>
+            </div>
+
             {/* PENGU Token */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -260,16 +347,16 @@ export default function DashboardPage() {
               </div>
               <div className="flex space-x-1 lg:space-x-2">
                 <Button
-                  onClick={() => setShowStakingModal(true)}
+                  onClick={() => router.push("/dashboard/deposit")}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
                 >
-                  Stake
+                  Deposit
                 </Button>
                 <Button
-                  onClick={() => router.push("/dashboard/buy-pengu")}
+                  onClick={() => router.push("/dashboard/withdraw")}
                   className="bg-gray-700 hover:bg-gray-600 text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm"
                 >
-                  Buy
+                  Withdraw
                 </Button>
               </div>
             </div>
