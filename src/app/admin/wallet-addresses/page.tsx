@@ -121,6 +121,7 @@ export default function WalletAddressesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key for force re-render
 
   const [toast, setToast] = useState({
     show: false,
@@ -259,6 +260,7 @@ export default function WalletAddressesPage() {
   const [formData, setFormData] = useState({
     crypto_symbol: "",
     network: "",
+    address: "",
     instructions: "",
     min_deposit: "",
     max_deposit: "",
@@ -272,7 +274,8 @@ export default function WalletAddressesPage() {
 
   const fetchAddresses = async () => {
     try {
-      setIsLoading(true);
+      // FAST LOADING: Don't set loading to true, let page show immediately
+      // setIsLoading(true);
 
       // Fetch deposit addresses
       const { data: depositData, error: depositError } = await (supabase as any)
@@ -331,6 +334,15 @@ export default function WalletAddressesPage() {
 
       setDepositAddresses(depositData || []);
       setWithdrawalAddresses(withdrawalData || []);
+
+      // Force re-render by updating refresh key
+      setRefreshKey((prev) => prev + 1);
+
+      console.log("✅ State updated with new data:", {
+        depositCount: depositData?.length || 0,
+        withdrawalCount: withdrawalData?.length || 0,
+        refreshKey: refreshKey + 1,
+      });
     } catch (error) {
       console.error("Error fetching addresses:", error);
       setToast({
@@ -339,18 +351,20 @@ export default function WalletAddressesPage() {
         type: "error",
       });
     } finally {
-      setIsLoading(false);
+      // FAST LOADING: Don't set loading to false since we never set it to true
+      // setIsLoading(false);
     }
   };
 
   const fetchWithdrawalRequests = async () => {
     try {
+      // Try to fetch with user profiles first
       const { data, error } = await (supabase as any)
         .from("withdrawal_requests")
         .select(
           `
           *,
-          user_profiles!inner(
+          user_profiles(
             user_id,
             email,
             first_name,
@@ -360,16 +374,23 @@ export default function WalletAddressesPage() {
         )
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // If that fails, try without the join
+        console.log("Failed to fetch with user profiles, trying without join");
+        const { data: simpleData, error: simpleError } = await (supabase as any)
+          .from("withdrawal_requests")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      setWithdrawalRequests(data || []);
+        if (simpleError) throw simpleError;
+        setWithdrawalRequests(simpleData || []);
+      } else {
+        setWithdrawalRequests(data || []);
+      }
     } catch (error) {
       console.error("Error fetching withdrawal requests:", error);
-      setToast({
-        show: true,
-        message: "Failed to fetch withdrawal requests",
-        type: "error",
-      });
+      // Don't show error toast, just set empty array
+      setWithdrawalRequests([]);
     }
   };
 
@@ -423,6 +444,22 @@ export default function WalletAddressesPage() {
     fetchWithdrawalRequests();
   }, []);
 
+  // Debug: Log when addresses state changes
+  useEffect(() => {
+    console.log("🔄 Addresses state changed:", {
+      depositCount: depositAddresses.length,
+      withdrawalCount: withdrawalAddresses.length,
+      depositAddresses: depositAddresses.map((addr) => ({
+        id: addr.id,
+        symbol: addr.crypto_symbol,
+      })),
+      withdrawalAddresses: withdrawalAddresses.map((addr) => ({
+        id: addr.id,
+        symbol: addr.crypto_symbol,
+      })),
+    });
+  }, [depositAddresses, withdrawalAddresses]);
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -445,6 +482,7 @@ export default function WalletAddressesPage() {
     setFormData({
       crypto_symbol: "",
       network: "",
+      address: "",
       instructions: "",
       min_deposit: "",
       max_deposit: "",
@@ -470,6 +508,7 @@ export default function WalletAddressesPage() {
     const formDataToSet = {
       crypto_symbol: address.crypto_symbol,
       network: address.network,
+      address: "address" in address ? address.address : "",
       instructions: "instructions" in address ? address.instructions : "",
       min_deposit:
         "min_deposit" in address ? address.min_deposit.toString() : "",
@@ -531,7 +570,7 @@ export default function WalletAddressesPage() {
         type: "success",
       });
 
-      fetchAddresses();
+      await fetchAddresses();
     } catch (error) {
       console.error("Error deleting address:", error);
       setToast({
@@ -629,6 +668,7 @@ export default function WalletAddressesPage() {
         const addressData = {
           crypto_symbol: formData.crypto_symbol,
           network: formData.network,
+          address: formData.address,
           instructions: formData.instructions,
           min_deposit: parseFloat(formData.min_deposit) || 0,
           max_deposit: parseFloat(formData.max_deposit) || 999999,
@@ -690,6 +730,7 @@ export default function WalletAddressesPage() {
         const addressData = {
           crypto_symbol: formData.crypto_symbol,
           network: formData.network,
+          address: formData.address,
           daily_limit: parseFloat(formData.daily_limit) || 999999,
           min_withdrawal: parseFloat(formData.min_withdrawal) || 0,
           max_withdrawal: parseFloat(formData.max_withdrawal) || 999999,
@@ -884,16 +925,17 @@ export default function WalletAddressesPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading wallet addresses...</p>
-        </div>
-      </div>
-    );
-  }
+  // INSTANT ACCESS: Show page immediately, data loads in background
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-[400px]">
+  //       <div className="text-center">
+  //         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+  //         <p className="text-gray-400">Loading wallet addresses...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <ProtectedRoute>
@@ -1193,7 +1235,7 @@ export default function WalletAddressesPage() {
                   )}
 
                 {/* Addresses List */}
-                <div className="space-y-4">
+                <div className="space-y-4" key={refreshKey}>
                   {(activeTab === "deposit"
                     ? depositAddresses
                     : withdrawalAddresses
@@ -1346,6 +1388,23 @@ export default function WalletAddressesPage() {
                             }
                             placeholder="mainnet, testnet, polygon"
                             className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Wallet Address
+                          </label>
+                          <Input
+                            value={formData.address}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                address: e.target.value,
+                              })
+                            }
+                            placeholder="Enter cryptocurrency wallet address"
+                            className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-mono text-sm"
                           />
                         </div>
 

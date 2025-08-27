@@ -6,7 +6,7 @@ import { User } from "@supabase/supabase-js";
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false for instant access
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 

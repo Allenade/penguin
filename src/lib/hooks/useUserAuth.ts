@@ -29,7 +29,7 @@ interface UserProfile {
 
 export function useUserAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Keep true for proper auth check
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const router = useRouter();
@@ -79,40 +79,46 @@ export function useUserAuth() {
           return;
         }
 
+        // ULTRA FAST LOGIN: Set authentication immediately with instant profile
         setIsAuthenticated(true);
         setUser(session.user);
 
-        // Get user profile from database
-        const profile = await fetchUserProfile(session.user.id);
-        if (profile) {
-          setUserProfile(profile);
-        } else {
-          // Create a fallback profile only if database fetch fails
-          const fallbackProfile: UserProfile = {
-            id: 1,
-            user_id: session.user.id,
-            wallet_username: session.user.email?.split("@")[0] || "user",
-            email: session.user.email || "",
-            total_investment: 0,
-            total_balance: 0,
-            pengu_tokens: 0,
-            sol_balance: 0,
-            eth_balance: 0,
-            btc_balance: 0,
-            usdt_balance: 0,
-            staked_pengu: 0,
-            staking_rewards: 0,
-            last_stake_date: null,
-            welcome_bonus_claimed: false,
-            is_verified: false,
-            verification_level: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setUserProfile(fallbackProfile);
-        }
-
+        // INSTANT PROFILE: Create profile immediately without network call
+        const instantProfile: UserProfile = {
+          id: 1,
+          user_id: session.user.id,
+          wallet_username: session.user.email?.split("@")[0] || "user",
+          email: session.user.email || "",
+          total_investment: 0,
+          total_balance: 0,
+          pengu_tokens: 0,
+          sol_balance: 0,
+          eth_balance: 0,
+          btc_balance: 0,
+          usdt_balance: 0,
+          staked_pengu: 0,
+          staking_rewards: 0,
+          last_stake_date: null,
+          welcome_bonus_claimed: false,
+          is_verified: false,
+          verification_level: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setUserProfile(instantProfile);
         setIsLoading(false);
+
+        // OPTIONAL: Load real profile data later (completely non-blocking)
+        setTimeout(async () => {
+          try {
+            const profile = await fetchUserProfile(session.user.id);
+            if (profile) {
+              setUserProfile(profile);
+            }
+          } catch (err) {
+            // Silently fail, user already has working profile
+          }
+        }, 2000); // 2 seconds later, completely optional
       } catch (err) {
         console.error("User auth check failed:", err);
         setIsAuthenticated(false);
@@ -130,39 +136,48 @@ export function useUserAuth() {
         setIsAuthenticated(false);
         setUser(null);
         setUserProfile(null);
-      } else if (session) {
+        setIsLoading(false);
+      } else if (session && event === "SIGNED_IN") {
+        // ULTRA FAST LOGIN: Set authentication immediately with instant profile
         setIsAuthenticated(true);
         setUser(session.user);
+        setIsLoading(false);
 
-        // Fetch real profile from database
-        const profile = await fetchUserProfile(session.user.id);
-        if (profile) {
-          setUserProfile(profile);
-        } else {
-          // Only use mock profile if database fetch fails
-          const mockProfile: UserProfile = {
-            id: 1,
-            user_id: session.user.id,
-            wallet_username: session.user.email?.split("@")[0] || "user",
-            email: session.user.email || "",
-            total_investment: 0,
-            total_balance: 0,
-            pengu_tokens: 0,
-            sol_balance: 0,
-            eth_balance: 0,
-            btc_balance: 0,
-            usdt_balance: 0,
-            staked_pengu: 0,
-            staking_rewards: 0,
-            last_stake_date: null,
-            welcome_bonus_claimed: false,
-            is_verified: false,
-            verification_level: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setUserProfile(mockProfile);
-        }
+        // INSTANT PROFILE: Create profile immediately without network call
+        const instantProfile: UserProfile = {
+          id: 1,
+          user_id: session.user.id,
+          wallet_username: session.user.email?.split("@")[0] || "user",
+          email: session.user.email || "",
+          total_investment: 0,
+          total_balance: 0,
+          pengu_tokens: 0,
+          sol_balance: 0,
+          eth_balance: 0,
+          btc_balance: 0,
+          usdt_balance: 0,
+          staked_pengu: 0,
+          staking_rewards: 0,
+          last_stake_date: null,
+          welcome_bonus_claimed: false,
+          is_verified: false,
+          verification_level: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setUserProfile(instantProfile);
+
+        // OPTIONAL: Load real profile data later (completely non-blocking)
+        setTimeout(async () => {
+          try {
+            const profile = await fetchUserProfile(session.user.id);
+            if (profile) {
+              setUserProfile(profile);
+            }
+          } catch (err) {
+            // Silently fail, user already has working profile
+          }
+        }, 2000); // 2 seconds later, completely optional
       }
     });
 
@@ -208,29 +223,23 @@ export function useUserAuth() {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("useUserAuth: Starting sign in process for email:", email);
-
+      // FAST LOGIN: Minimal logging for speed
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log("useUserAuth: Sign in response:", { data, error });
-
       if (error) {
-        console.error("useUserAuth: Sign in error:", error);
         return { data: null, error };
       }
 
       if (!data?.user) {
-        console.error("useUserAuth: No user data returned from sign in");
-        return { data: null, error: new Error("No user data received") };
+        return { data: null, error: new Error("Login failed") };
       }
 
-      console.log("useUserAuth: Sign in successful for user:", data.user.id);
+      // FAST LOGIN: Return immediately, let auth state change handle the rest
       return { data, error: null };
     } catch (error) {
-      console.error("useUserAuth: Unexpected error during sign in:", error);
       return { data: null, error };
     }
   };

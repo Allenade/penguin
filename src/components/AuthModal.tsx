@@ -114,28 +114,21 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       if (isLoginMode) {
-        // Sign in
+        // FAST LOGIN: Sign in with immediate redirect
         const { error } = await signIn(formData.email, formData.password);
 
         if (error) {
           setMessage({
             type: "error",
-            text: "Login failed. Please try again.",
+            text: "Login failed. Please check your credentials.",
           });
           setIsLoading(false);
           return;
         }
 
-        setMessage({
-          type: "success",
-          text: "Login successful!",
-        });
-
-        // Redirect to huddle page after success
-        setTimeout(() => {
-          onClose();
-          router.push("/huddle");
-        }, 1500);
+        // FAST LOGIN: Immediate redirect, no delay
+        onClose();
+        router.push("/huddle");
       } else {
         // Sign up
         const { error } = await signUp(

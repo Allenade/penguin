@@ -73,3 +73,4 @@ CREATE TRIGGER update_staking_controls_updated_at
   FOR EACH ROW 
   EXECUTE FUNCTION update_staking_controls_updated_at();
 
+
