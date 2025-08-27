@@ -60,7 +60,6 @@ export default function AdminStakingPage() {
     reward_frequency: "daily",
     is_active: true,
   });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const {
     createStakingSettings,
@@ -109,27 +108,35 @@ export default function AdminStakingPage() {
         is_active: settingsForm.is_active,
       };
 
+      let result;
       if (editingSettings) {
-        await updateStakingSettings(editingSettings.id, settingsData);
+        result = await updateStakingSettings(editingSettings.id, settingsData);
+      } else {
+        result = await createStakingSettings(settingsData);
+      }
+
+      if (result.success) {
         setToast({
           show: true,
-          message: "Staking settings updated successfully",
+          message: `Staking settings ${
+            editingSettings ? "updated" : "created"
+          } successfully`,
           type: "success",
         });
+        setShowSettingsModal(false);
+        await fetchCryptoData(); // Refresh data
       } else {
-        await createStakingSettings(settingsData);
         setToast({
           show: true,
-          message: "Staking settings created successfully",
-          type: "success",
+          message: result.error || "Failed to save staking settings",
+          type: "error",
         });
       }
-      setShowSettingsModal(false);
-      fetchCryptoData();
     } catch (error) {
+      console.error("Error saving staking settings:", error);
       setToast({
         show: true,
-        message: "Error saving staking settings",
+        message: "Failed to save staking settings",
         type: "error",
       });
     }
@@ -139,11 +146,7 @@ export default function AdminStakingPage() {
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
         {/* Sidebar */}
-        <div
-          className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          }`}
-        >
+        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
           <div className="flex flex-col h-full">
             {/* Sidebar Header */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -229,37 +232,9 @@ export default function AdminStakingPage() {
           </div>
         </div>
 
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
         {/* Main Content */}
-        <div className="flex-1 ml-0 md:ml-64 p-4 lg:p-8">
+        <div className="flex-1 p-4 lg:p-8">
           <div className="max-w-6xl mx-auto">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-md"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 Staking Management
@@ -271,7 +246,7 @@ export default function AdminStakingPage() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 bg-gray-200 dark:bg-gray-700 p-1 rounded-lg mb-6">
+            <div className="flex space-x-1 bg-gray-200 dark:bg-gray-700 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab("settings")}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
@@ -318,8 +293,9 @@ export default function AdminStakingPage() {
               </button>
             </div>
 
-            {/* Tab Content */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            {/* Staking Content */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="space-y-6">
               {/* Settings Tab */}
               {activeTab === "settings" && (
                 <div>
@@ -363,27 +339,24 @@ export default function AdminStakingPage() {
                               <div>Lock: {settings.lock_period_days} days</div>
                             </div>
                           </div>
-                          <Button
-                            onClick={() => handleEditSettings(settings)}
-                            variant="outline"
-                            size="sm"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              onClick={() => handleEditSettings(settings)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-400">
-                          No staking settings found
+                      <div className="text-center text-gray-400 py-8">
+                        <p>No staking settings found</p>
+                        <p className="text-sm mt-2">
+                          Click &quot;Add Settings&quot; to create the first
+                          staking configuration
                         </p>
-                        <Button
-                          onClick={handleAddSettings}
-                          className="mt-4 bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add First Setting
-                        </Button>
                       </div>
                     )}
                   </div>
@@ -393,11 +366,11 @@ export default function AdminStakingPage() {
               {/* Active Staking Tab */}
               {activeTab === "active" && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Active Staking</h2>
-                  <div className="text-center py-8">
-                    <p className="text-gray-400">
-                      Active staking data will be displayed here
-                    </p>
+                  <h2 className="text-xl font-semibold mb-6">
+                    Active Staking Positions
+                  </h2>
+                  <div className="text-center text-gray-400">
+                    <p>Active staking positions will appear here</p>
                   </div>
                 </div>
               )}
@@ -405,11 +378,11 @@ export default function AdminStakingPage() {
               {/* Rewards Tab */}
               {activeTab === "rewards" && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Rewards</h2>
-                  <div className="text-center py-8">
-                    <p className="text-gray-400">
-                      Rewards data will be displayed here
-                    </p>
+                  <h2 className="text-xl font-semibold mb-6">
+                    Rewards Management
+                  </h2>
+                  <div className="text-center text-gray-400">
+                    <p>Rewards management will appear here</p>
                   </div>
                 </div>
               )}
@@ -420,153 +393,152 @@ export default function AdminStakingPage() {
                   <h2 className="text-xl font-semibold mb-6">
                     System Controls
                   </h2>
-                  <div className="text-center py-8">
-                    <p className="text-gray-400">
-                      System controls will be displayed here
-                    </p>
+                  <div className="text-center text-gray-400">
+                    <p>System controls will appear here</p>
                   </div>
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Settings Modal */}
-        {showSettingsModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-white">
-                  {editingSettings ? "Edit" : "Add"} Staking Settings
-                </h2>
-                <button
-                  onClick={() => setShowSettingsModal(false)}
-                  className="text-gray-400 hover:text-gray-300"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Crypto Symbol
-                  </label>
-                  <Input
-                    type="text"
-                    value={settingsForm.crypto_symbol}
-                    onChange={(e) =>
-                      setSettingsForm({
-                        ...settingsForm,
-                        crypto_symbol: e.target.value,
-                      })
-                    }
-                    className="bg-gray-700 border-gray-600 text-white"
-                    placeholder="e.g., PENGU"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      APY Percentage
-                    </label>
-                    <Input
-                      type="number"
-                      value={settingsForm.apy_percentage}
-                      onChange={(e) =>
-                        setSettingsForm({
-                          ...settingsForm,
-                          apy_percentage: e.target.value,
-                        })
-                      }
-                      className="bg-gray-700 border-gray-600 text-white"
-                      step="0.01"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Lock Period (days)
-                    </label>
-                    <Input
-                      type="number"
-                      value={settingsForm.lock_period_days}
-                      onChange={(e) =>
-                        setSettingsForm({
-                          ...settingsForm,
-                          lock_period_days: e.target.value,
-                        })
-                      }
-                      className="bg-gray-700 border-gray-600 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Min Stake Amount
-                    </label>
-                    <Input
-                      type="number"
-                      value={settingsForm.min_stake_amount}
-                      onChange={(e) =>
-                        setSettingsForm({
-                          ...settingsForm,
-                          min_stake_amount: e.target.value,
-                        })
-                      }
-                      className="bg-gray-700 border-gray-600 text-white"
-                      step="0.01"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Max Stake Amount
-                    </label>
-                    <Input
-                      type="number"
-                      value={settingsForm.max_stake_amount}
-                      onChange={(e) =>
-                        setSettingsForm({
-                          ...settingsForm,
-                          max_stake_amount: e.target.value,
-                        })
-                      }
-                      className="bg-gray-700 border-gray-600 text-white"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex space-x-3">
-                  <Button
-                    onClick={handleSaveSettings}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingSettings ? "Update" : "Create"}
-                  </Button>
-                  <Button
+          {/* Settings Modal */}
+          {showSettingsModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">
+                    {editingSettings ? "Edit" : "Add"} Staking Settings
+                  </h3>
+                  <button
                     onClick={() => setShowSettingsModal(false)}
-                    variant="outline"
-                    className="flex-1"
+                    className="text-gray-400 hover:text-white"
                   >
-                    Cancel
-                  </Button>
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Crypto Symbol
+                    </label>
+                    <Input
+                      value={settingsForm.crypto_symbol}
+                      onChange={(e) =>
+                        setSettingsForm({
+                          ...settingsForm,
+                          crypto_symbol: e.target.value,
+                        })
+                      }
+                      placeholder="PENGU, ETH, USDT"
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        APY (%)
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.apy_percentage}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            apy_percentage: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Lock Period (days)
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.lock_period_days}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            lock_period_days: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Min Stake Amount
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.min_stake_amount}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            min_stake_amount: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Max Stake Amount
+                      </label>
+                      <Input
+                        type="number"
+                        value={settingsForm.max_stake_amount}
+                        onChange={(e) =>
+                          setSettingsForm({
+                            ...settingsForm,
+                            max_stake_amount: e.target.value,
+                          })
+                        }
+                        className="bg-gray-700 border-gray-600 text-white"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={handleSaveSettings}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {editingSettings ? "Update" : "Create"}
+                    </Button>
+                    <Button
+                      onClick={() => setShowSettingsModal(false)}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+              </div>
+            </div>
 
-        {/* Toast Notification */}
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          isVisible={toast.show}
-          onClose={() => setToast({ ...toast, show: false })}
-        />
+          {/* Toast Notification */}
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            isVisible={toast.show}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        </div>
       </div>
     </ProtectedRoute>
   );
