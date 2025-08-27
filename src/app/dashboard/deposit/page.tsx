@@ -16,6 +16,14 @@ export default function DepositPage() {
 
   const { assets, depositAddresses } = useCrypto();
 
+  // Set initial selected token when deposit addresses load
+  React.useEffect(() => {
+    if (depositAddresses.length > 0 && !selectedToken) {
+      const firstAddress = depositAddresses[0];
+      setSelectedToken(`${firstAddress.crypto_symbol}-${firstAddress.id}`);
+    }
+  }, [depositAddresses, selectedToken]);
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -33,8 +41,16 @@ export default function DepositPage() {
     }
   };
 
-  const getDepositAddress = (symbol: string) => {
-    return depositAddresses.find((addr) => addr.crypto_symbol === symbol);
+  const getDepositAddress = (tokenId: string) => {
+    // Handle the new format: "SYMBOL-ID"
+    if (tokenId.includes("-")) {
+      const [symbol, id] = tokenId.split("-");
+      return depositAddresses.find(
+        (addr) => addr.crypto_symbol === symbol && addr.id.toString() === id
+      );
+    }
+    // Fallback for old format
+    return depositAddresses.find((addr) => addr.crypto_symbol === tokenId);
   };
 
   const getTokenIcon = (symbol: string) => {
@@ -64,22 +80,55 @@ export default function DepositPage() {
       {/* Token Selection */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Select Token</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {assets.map((asset) => (
-            <button
-              key={asset.symbol}
-              onClick={() => setSelectedToken(asset.symbol)}
-              className={`p-4 rounded-lg border transition-colors ${
-                selectedToken === asset.symbol
-                  ? "bg-blue-600 border-blue-500 text-white"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              <div className="text-2xl mb-2">{getTokenIcon(asset.symbol)}</div>
-              <div className="text-sm font-medium">{asset.symbol}</div>
-            </button>
-          ))}
-        </div>
+        {depositAddresses.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {depositAddresses.map((address) => (
+              <button
+                key={`${address.crypto_symbol}-${address.id}`}
+                onClick={() =>
+                  setSelectedToken(`${address.crypto_symbol}-${address.id}`)
+                }
+                className={`p-4 rounded-lg border transition-colors ${
+                  selectedToken === `${address.crypto_symbol}-${address.id}`
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <div className="text-2xl mb-2">
+                  {address.icon_url ? (
+                    <img
+                      src={address.icon_url}
+                      alt={address.crypto_symbol}
+                      className="w-8 h-8 mx-auto rounded-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        const emojiSpan = document.createElement("span");
+                        emojiSpan.textContent = getTokenIcon(
+                          address.crypto_symbol
+                        );
+                        emojiSpan.className = "text-2xl";
+                        target.parentNode?.appendChild(emojiSpan);
+                      }}
+                    />
+                  ) : (
+                    getTokenIcon(address.crypto_symbol)
+                  )}
+                </div>
+                <div className="text-sm font-medium">
+                  {address.crypto_symbol}
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gray-800 rounded-lg p-6 text-center">
+            <p className="text-gray-400 mb-2">No deposit addresses available</p>
+            <p className="text-sm text-gray-500">
+              Please check with admin to configure deposit addresses
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Deposit Address */}
@@ -89,8 +138,32 @@ export default function DepositPage() {
         {getDepositAddress(selectedToken) ? (
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center space-x-2 mb-4">
-              <span className="text-2xl">{getTokenIcon(selectedToken)}</span>
-              <span className="font-medium">{selectedToken} Address</span>
+              <span className="text-2xl">
+                {getDepositAddress(selectedToken)?.icon_url ? (
+                  <img
+                    src={getDepositAddress(selectedToken)?.icon_url}
+                    alt={selectedToken}
+                    className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      const emojiSpan = document.createElement("span");
+                      emojiSpan.textContent = getTokenIcon(selectedToken);
+                      emojiSpan.className = "text-2xl";
+                      target.parentNode?.appendChild(emojiSpan);
+                    }}
+                  />
+                ) : (
+                  getTokenIcon(selectedToken)
+                )}
+              </span>
+              <div>
+                <span className="font-medium">{selectedToken} Address</span>
+                <div className="text-sm text-gray-400">
+                  Network:{" "}
+                  {getDepositAddress(selectedToken)?.network || "mainnet"}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -128,16 +201,28 @@ export default function DepositPage() {
                 <h4 className="font-medium text-blue-100 mb-2">
                   Deposit Instructions
                 </h4>
-                <ul className="text-sm text-blue-200 space-y-1">
-                  <li>• Send only {selectedToken} to this address</li>
-                  <li>
-                    • Minimum deposit:{" "}
-                    {getDepositAddress(selectedToken)?.min_deposit || "0.001"}{" "}
-                    {selectedToken}
-                  </li>
-                  <li>• Deposits are credited after 3 confirmations</li>
-                  <li>• Double-check the address before sending</li>
-                </ul>
+                {getDepositAddress(selectedToken)?.instructions ? (
+                  <div className="text-sm text-blue-200 whitespace-pre-line">
+                    {getDepositAddress(selectedToken)?.instructions}
+                  </div>
+                ) : (
+                  <ul className="text-sm text-blue-200 space-y-1">
+                    <li>• Send only {selectedToken} to this address</li>
+                    <li>
+                      • Minimum deposit:{" "}
+                      {getDepositAddress(selectedToken)?.min_deposit || "0.001"}{" "}
+                      {selectedToken}
+                    </li>
+                    <li>
+                      • Maximum deposit:{" "}
+                      {getDepositAddress(selectedToken)?.max_deposit ||
+                        "999999"}{" "}
+                      {selectedToken}
+                    </li>
+                    <li>• Deposits are credited after 3 confirmations</li>
+                    <li>• Double-check the address before sending</li>
+                  </ul>
+                )}
               </div>
             </div>
           </div>
