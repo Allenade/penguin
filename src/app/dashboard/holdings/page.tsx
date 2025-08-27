@@ -1,18 +1,80 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useUserAuth } from "@/lib/hooks/useUserAuth";
 import { useCrypto } from "@/lib/hooks/useCrypto";
+import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 import { Bitcoin, Zap, TrendingUp, DollarSign } from "lucide-react";
 
 export default function HoldingsPage() {
   const { userProfile, refreshUserProfile } = useUserAuth();
   const { assets } = useCrypto();
+  const [customIcons, setCustomIcons] = useState<Record<string, string>>({});
+  const [isLoadingIcons, setIsLoadingIcons] = useState(true);
+
+  // Fetch custom icons from deposit addresses
+  const fetchCustomIcons = async () => {
+    try {
+      setIsLoadingIcons(true);
+      const { data, error } = await (supabase as any)
+        .from("deposit_addresses")
+        .select("crypto_symbol, icon_url")
+        .eq("is_active", true);
+
+      if (error) {
+        console.error("Error fetching custom icons:", error);
+        return;
+      }
+
+      const icons: Record<string, string> = {};
+      data?.forEach((item: any) => {
+        if (item.icon_url) {
+          icons[item.crypto_symbol] = item.icon_url;
+        }
+      });
+
+      setCustomIcons(icons);
+    } catch (error) {
+      console.error("Error fetching custom icons:", error);
+    } finally {
+      setIsLoadingIcons(false);
+    }
+  };
+
+  // Fetch custom icons on component mount
+  useEffect(() => {
+    fetchCustomIcons();
+  }, []);
+
+  // Real-time subscription to deposit_addresses changes for icon updates
+  useEffect(() => {
+    const subscription = (supabase as any)
+      .channel("holdings_icon_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "deposit_addresses",
+        },
+        (payload: any) => {
+          console.log("Deposit addresses changed, refreshing icons:", payload);
+          fetchCustomIcons();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Periodic refresh of user profile to catch admin updates
   useEffect(() => {
     const interval = setInterval(() => {
       refreshUserProfile();
+      fetchCustomIcons(); // Also refresh icons
     }, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
@@ -48,6 +110,34 @@ export default function HoldingsPage() {
   });
 
   const getAssetIcon = (symbol: string) => {
+    // Check if custom icon exists for this symbol
+    if (customIcons[symbol] && !isLoadingIcons) {
+      return (
+        <div className="w-5 h-5 relative">
+          <Image
+            src={customIcons[symbol]}
+            alt={`${symbol} icon`}
+            width={20}
+            height={20}
+            className="rounded-full"
+            onError={(e) => {
+              // Fallback to default icon if custom icon fails to load
+              const target = e.target as HTMLImageElement;
+              target.style.display = "none";
+              target.nextElementSibling?.classList.remove("hidden");
+            }}
+          />
+          {/* Fallback icon (hidden by default) */}
+          <div className="hidden">{getDefaultIcon(symbol)}</div>
+        </div>
+      );
+    }
+
+    // Return default icon if no custom icon or still loading
+    return getDefaultIcon(symbol);
+  };
+
+  const getDefaultIcon = (symbol: string) => {
     switch (symbol) {
       case "PENGU":
         return <Bitcoin className="h-5 w-5 text-purple-500" />;
@@ -96,7 +186,15 @@ export default function HoldingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">PENGU Holdings</h2>
-        <TrendingUp className="h-6 w-6 text-green-500" />
+        <div className="flex items-center space-x-2">
+          {isLoadingIcons && (
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+              <span>Loading icons...</span>
+            </div>
+          )}
+          <TrendingUp className="h-6 w-6 text-green-500" />
+        </div>
       </div>
 
       {/* Total Portfolio Value */}

@@ -62,6 +62,25 @@ export default function UserManagementPage() {
     totalDeposits: 0,
     totalWithdrawals: 0,
   });
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [newDataNotification, setNewDataNotification] = useState({
+    show: false,
+    message: "",
+    type: "info" as "info" | "success" | "warning",
+  });
+
+  // Function to play notification sound
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio(
+        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"
+      );
+      audio.volume = 0.3;
+      audio.play();
+    } catch (error) {
+      console.log("Audio notification failed:", error);
+    }
+  };
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -83,6 +102,111 @@ export default function UserManagementPage() {
   const handleLogout = async () => {
     await logout();
   };
+
+  // Real-time subscriptions for live data updates
+  useEffect(() => {
+    // Subscribe to user_profiles table changes
+    const userProfilesSubscription = (supabaseAdmin as any)
+      .channel("admin_user_profiles_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: "public",
+          table: "user_profiles",
+        },
+        (payload: any) => {
+          console.log("User profiles changed:", payload);
+          // Refresh the user list when data changes
+          loadAllUsers();
+          loadSystemStats();
+          setLastUpdated(new Date());
+
+          // Show notification for new data
+          if (payload.eventType === "INSERT") {
+            setNewDataNotification({
+              show: true,
+              message: "New user data updated",
+              type: "info",
+            });
+            // Auto-hide after 3 seconds
+            setTimeout(
+              () =>
+                setNewDataNotification({
+                  show: false,
+                  message: "",
+                  type: "info",
+                }),
+              3000
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to withdrawal_requests table changes
+    const withdrawalRequestsSubscription = (supabaseAdmin as any)
+      .channel("admin_withdrawal_requests_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // Listen to all events
+          schema: "public",
+          table: "withdrawal_requests",
+        },
+        (payload: any) => {
+          console.log("Withdrawal requests changed:", payload);
+          // Refresh withdrawal requests and stats when data changes
+          loadWithdrawalRequests();
+          loadSystemStats();
+          setLastUpdated(new Date());
+
+          // Show notification for new withdrawal requests
+          if (payload.eventType === "INSERT") {
+            setNewDataNotification({
+              show: true,
+              message: "New withdrawal request received!",
+              type: "warning",
+            });
+            // Play notification sound
+            playNotificationSound();
+            // Auto-hide after 5 seconds for withdrawal requests
+            setTimeout(
+              () =>
+                setNewDataNotification({
+                  show: false,
+                  message: "",
+                  type: "info",
+                }),
+              5000
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    // Initial load
+    loadAllUsers();
+    loadWithdrawalRequests();
+    loadSystemStats();
+
+    return () => {
+      userProfilesSubscription.unsubscribe();
+      withdrawalRequestsSubscription.unsubscribe();
+    };
+  }, []);
+
+  // Periodic refresh as backup (every 30 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadAllUsers();
+      loadWithdrawalRequests();
+      loadSystemStats();
+      setLastUpdated(new Date());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const loadAllUsers = async () => {
     setIsLoadingUsers(true);
@@ -453,9 +577,20 @@ export default function UserManagementPage() {
 
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Welcome, Admin
-              </h1>
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Welcome, Admin
+                </h1>
+                <div className="flex items-center space-x-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </div>
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-full text-sm">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Live Data</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* User Management Section */}
@@ -467,6 +602,38 @@ export default function UserManagementPage() {
                 Manage users, withdrawal requests, and view system overview
               </p>
             </div>
+
+            {/* Live Data Notification */}
+            {newDataNotification.show && (
+              <div
+                className={`mb-4 p-4 rounded-lg border ${
+                  newDataNotification.type === "warning"
+                    ? "bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200"
+                    : "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3 animate-pulse"></div>
+                    <span className="font-medium">
+                      {newDataNotification.message}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setNewDataNotification({
+                        show: false,
+                        message: "",
+                        type: "info",
+                      })
+                    }
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Main Content */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
