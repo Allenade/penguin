@@ -185,7 +185,7 @@ export default function HoldingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">PENGU Holdings</h2>
+        <h2 className="text-2xl font-bold">Assets</h2>
         <div className="flex items-center space-x-2">
           {isLoadingIcons && (
             <div className="flex items-center space-x-2 text-sm text-gray-400">

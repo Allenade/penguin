@@ -134,9 +134,7 @@ export default function DashboardLayout({
                 >
                   <Menu className="h-6 w-6" />
                 </button>
-                <h1 className="text-lg lg:text-xl font-semibold">
-                  PENGU Dashboard
-                </h1>
+                <h1 className="text-lg lg:text-xl font-semibold">Dashboard</h1>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="relative">
