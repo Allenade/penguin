@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import Toast from "@/components/Toast";
 import { useUserAuth } from "@/lib/hooks/useUserAuth";
 import { useCrypto } from "@/lib/hooks/useCrypto";
+import { useCryptoPrices } from "@/lib/hooks/useCryptoPrices";
 import WelcomeBonus from "@/components/WelcomeBonus";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +23,7 @@ export default function DashboardPage() {
 
   const { user, userProfile, refreshUserProfile } = useUserAuth();
   const router = useRouter();
+  const { getAssetPrice } = useCryptoPrices();
   const {
     isLoading: cryptoLoading,
     fetchUserStaking,
@@ -198,7 +200,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-400">
                     Min: {getStakingSettings("PENGU")?.min_stake_amount} PENGU |
                     Max: {getStakingSettings("PENGU")?.max_stake_amount} PENGU |
-                    APY: {getStakingSettings("PENGU")?.apy_percentage}%
+                    DRI: {getStakingSettings("PENGU")?.apy_percentage}%
                   </p>
                 )}
               </div>

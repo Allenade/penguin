@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useUserAuth } from "@/lib/hooks/useUserAuth";
 import { useCrypto } from "@/lib/hooks/useCrypto";
+import { useCryptoPrices } from "@/lib/hooks/useCryptoPrices";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 
@@ -10,6 +11,7 @@ import { Bitcoin, Zap, TrendingUp, DollarSign } from "lucide-react";
 export default function HoldingsPage() {
   const { userProfile, refreshUserProfile } = useUserAuth();
   const { assets } = useCrypto();
+  const { cryptoPrices, getAssetPrice } = useCryptoPrices();
   const [customIcons, setCustomIcons] = useState<Record<string, string>>({});
   const [isLoadingIcons, setIsLoadingIcons] = useState(true);
 
@@ -79,18 +81,6 @@ export default function HoldingsPage() {
 
     return () => clearInterval(interval);
   }, [refreshUserProfile]);
-
-  // Simple price management - we'll replace this with Supabase data later
-  const getAssetPrice = (symbol: string): number => {
-    const prices: Record<string, number> = {
-      PENGU: 0.15, // $0.15 per PENGU
-      USDT: 1.0, // $1.00 per USDT
-      SOL: 85.5, // $85.50 per SOL
-      ETH: 3200.0, // $3200 per ETH
-      BTC: 65000.0, // $65000 per BTC
-    };
-    return prices[symbol] || 0;
-  };
 
   // Debug: Log what data we have
   console.log("Holdings Page Data:", {

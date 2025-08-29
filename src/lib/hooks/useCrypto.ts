@@ -90,6 +90,13 @@ interface UserStaking {
   staked_at: string;
   unstaked_at: string | null;
   status: string;
+  admin_notes?: string;
+  user_profile?: {
+    email: string;
+    first_name: string;
+    last_name: string;
+    wallet_username: string;
+  };
 }
 
 interface CryptoSettings {
@@ -121,6 +128,13 @@ export function useCrypto() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
+  const [allUserStaking, setAllUserStaking] = useState<UserStaking[]>([]);
+  const [stakingAnalytics, setStakingAnalytics] = useState({
+    totalStaked: 0,
+    totalUsers: 0,
+    totalRewards: 0,
+    activeStakes: 0,
+  });
 
   // Fetch all crypto data
   const fetchCryptoData = async () => {
@@ -700,6 +714,333 @@ export function useCrypto() {
     }
   };
 
+  // Fetch all user staking data (for admin)
+  const fetchAllUserStaking = async () => {
+    try {
+      console.log("Fetching all user staking data for admin");
+
+      const { data, error } = await (supabase as any)
+        .from("user_staking")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching all user staking:", error);
+
+        // If table doesn't exist, return empty data instead of throwing
+        if (error.message && error.message.includes("does not exist")) {
+          console.log(
+            "user_staking table does not exist yet. Please run the migration."
+          );
+          setAllUserStaking([]);
+          setStakingAnalytics({
+            totalStaked: 0,
+            totalUsers: 0,
+            totalRewards: 0,
+            activeStakes: 0,
+          });
+          return [];
+        }
+
+        throw error;
+      }
+
+      console.log("All user staking fetched:", data?.length || 0);
+      setAllUserStaking(data || []);
+
+      // Calculate analytics
+      const analytics = {
+        totalStaked:
+          data?.reduce(
+            (sum: number, stake: UserStaking) =>
+              sum + (stake.status === "active" ? stake.staked_amount : 0),
+            0
+          ) || 0,
+        totalUsers: new Set(
+          data?.map((stake: UserStaking) => stake.user_id) || []
+        ).size,
+        totalRewards:
+          data?.reduce(
+            (sum: number, stake: UserStaking) => sum + stake.rewards_earned,
+            0
+          ) || 0,
+        activeStakes:
+          data?.filter((stake: UserStaking) => stake.status === "active")
+            .length || 0,
+      };
+
+      setStakingAnalytics(analytics);
+      return data || [];
+    } catch (err) {
+      console.error("Error fetching all user staking:", err);
+      // Set empty data on error
+      setAllUserStaking([]);
+      setStakingAnalytics({
+        totalStaked: 0,
+        totalUsers: 0,
+        totalRewards: 0,
+        activeStakes: 0,
+      });
+      return [];
+    }
+  };
+
+  // Edit user stake (admin function)
+  const editUserStake = async (
+    stakeId: number,
+    updates: {
+      staked_amount?: number;
+      apy_at_stake?: number;
+      status?: string;
+      admin_notes?: string;
+    }
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await (supabase as any)
+        .from("user_staking")
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", stakeId);
+
+      if (error) {
+        console.error("Error editing user stake:", error);
+        return {
+          success: false,
+          error: error.message || "Failed to edit user stake",
+        };
+      }
+
+      console.log("✅ User stake edited successfully");
+      await fetchAllUserStaking(); // Refresh data
+      return { success: true };
+    } catch (err) {
+      console.error("Error editing user stake:", err);
+      return {
+        success: false,
+        error: (err as Error).message || "Unknown error occurred",
+      };
+    }
+  };
+
+  // Pause user stake (admin function)
+  const pauseUserStake = async (
+    stakeId: number,
+    reason?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await (supabase as any)
+        .from("user_staking")
+        .update({
+          status: "paused",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", stakeId);
+
+      if (error) {
+        console.error("Error pausing user stake:", error);
+        return {
+          success: false,
+          error: error.message || "Failed to pause user stake",
+        };
+      }
+
+      // Log admin action
+      await (supabase as any).from("staking_events").insert({
+        event_type: "admin_action",
+        crypto_symbol: "PENGU", // You might want to get this from the stake record
+        description: `Stake paused by admin${reason ? `: ${reason}` : ""}`,
+      });
+
+      console.log("✅ User stake paused successfully");
+      await fetchAllUserStaking(); // Refresh data
+      return { success: true };
+    } catch (err) {
+      console.error("Error pausing user stake:", err);
+      return {
+        success: false,
+        error: (err as Error).message || "Unknown error occurred",
+      };
+    }
+  };
+
+  // Resume user stake (admin function)
+  const resumeUserStake = async (
+    stakeId: number
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await (supabase as any)
+        .from("user_staking")
+        .update({
+          status: "active",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", stakeId);
+
+      if (error) {
+        console.error("Error resuming user stake:", error);
+        return {
+          success: false,
+          error: error.message || "Failed to resume user stake",
+        };
+      }
+
+      // Log admin action
+      await (supabase as any).from("staking_events").insert({
+        event_type: "admin_action",
+        crypto_symbol: "PENGU",
+        description: "Stake resumed by admin",
+      });
+
+      console.log("✅ User stake resumed successfully");
+      await fetchAllUserStaking(); // Refresh data
+      return { success: true };
+    } catch (err) {
+      console.error("Error resuming user stake:", err);
+      return {
+        success: false,
+        error: (err as Error).message || "Unknown error occurred",
+      };
+    }
+  };
+
+  // Force unstake (admin function)
+  const forceUnstake = async (
+    stakeId: number,
+    reason?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      // Get the stake record first
+      const { data: stakeData, error: fetchError } = await (supabase as any)
+        .from("user_staking")
+        .select("*")
+        .eq("id", stakeId)
+        .single();
+
+      if (fetchError || !stakeData) {
+        return {
+          success: false,
+          error: "Stake record not found",
+        };
+      }
+
+      // Calculate rewards
+      const stakingDuration =
+        new Date().getTime() - new Date(stakeData.staked_at).getTime();
+      const daysStaked = stakingDuration / (1000 * 60 * 60 * 24);
+      const rewards =
+        (stakeData.staked_amount * stakeData.apy_at_stake * daysStaked) / 36500; // APY to daily rate
+
+      // Update stake record
+      const { error } = await (supabase as any)
+        .from("user_staking")
+        .update({
+          status: "force_unstaked",
+          unstaked_at: new Date().toISOString(),
+          rewards_earned: rewards,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", stakeId);
+
+      if (error) {
+        console.error("Error force unstaking:", error);
+        return {
+          success: false,
+          error: error.message || "Failed to force unstake",
+        };
+      }
+
+      // Add back to user balance (staked amount + rewards)
+      const totalAmount = stakeData.staked_amount + rewards;
+      const { error: balanceError } = await (supabase as any)
+        .from("user_profiles")
+        .update({
+          [`${stakeData.crypto_symbol.toLowerCase()}_balance`]: (
+            supabase as any
+          ).rpc("add_balance", {
+            user_uuid: stakeData.user_id,
+            crypto_symbol: stakeData.crypto_symbol,
+            amount: totalAmount,
+          }),
+        })
+        .eq("user_id", stakeData.user_id);
+
+      if (balanceError) {
+        console.error(
+          "Error updating user balance after force unstake:",
+          balanceError
+        );
+      }
+
+      // Log admin action
+      await (supabase as any).from("staking_events").insert({
+        event_type: "admin_action",
+        crypto_symbol: stakeData.crypto_symbol,
+        amount: totalAmount,
+        description: `Force unstake by admin${reason ? `: ${reason}` : ""}`,
+      });
+
+      console.log("✅ Force unstake completed successfully");
+      await fetchAllUserStaking(); // Refresh data
+      return { success: true };
+    } catch (err) {
+      console.error("Error force unstaking:", err);
+      return {
+        success: false,
+        error: (err as Error).message || "Unknown error occurred",
+      };
+    }
+  };
+
+  // Adjust user rewards (admin function)
+  const adjustUserRewards = async (
+    stakeId: number,
+    newRewardAmount: number,
+    reason?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await (supabase as any)
+        .from("user_staking")
+        .update({
+          rewards_earned: newRewardAmount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", stakeId);
+
+      if (error) {
+        console.error("Error adjusting user rewards:", error);
+        return {
+          success: false,
+          error: error.message || "Failed to adjust user rewards",
+        };
+      }
+
+      // Log admin action
+      await (supabase as any).from("staking_events").insert({
+        event_type: "admin_action",
+        crypto_symbol: "PENGU",
+        amount: newRewardAmount,
+        description: `Rewards adjusted by admin${reason ? `: ${reason}` : ""}`,
+      });
+
+      console.log("✅ User rewards adjusted successfully");
+      await fetchAllUserStaking(); // Refresh data
+      return { success: true };
+    } catch (err) {
+      console.error("Error adjusting user rewards:", err);
+      return {
+        success: false,
+        error: (err as Error).message || "Unknown error occurred",
+      };
+    }
+  };
+
+  // Get staking analytics
+  const getStakingAnalytics = () => {
+    return stakingAnalytics;
+  };
+
   useEffect(() => {
     fetchCryptoData();
   }, []);
@@ -737,5 +1078,15 @@ export function useCrypto() {
     createStakingSettings,
     updateStakingSettings,
     toggleStakingControl,
+    // User staking management functions
+    allUserStaking,
+    stakingAnalytics,
+    fetchAllUserStaking,
+    editUserStake,
+    pauseUserStake,
+    resumeUserStake,
+    forceUnstake,
+    adjustUserRewards,
+    getStakingAnalytics,
   };
 }

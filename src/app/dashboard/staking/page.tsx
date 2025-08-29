@@ -124,7 +124,7 @@ export default function StakingPage() {
       {/* Staking Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-700">
-          <p className="text-sm text-blue-300">APY</p>
+          <p className="text-sm text-blue-300">DIR</p>
           <p className="text-xl font-bold text-blue-100">
             {stakingSetting?.apy_percentage || 0}%
           </p>
@@ -170,7 +170,7 @@ export default function StakingPage() {
                   </p>
                   <p className="text-sm text-gray-400">
                     Staked on {new Date(staking.staked_at).toLocaleDateString()}{" "}
-                    | APY: {staking.apy_at_stake}%
+                    | DIR: {staking.apy_at_stake}%
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -229,7 +229,7 @@ export default function StakingPage() {
                 {stakingSetting && (
                   <p className="text-xs text-gray-400">
                     Min: {stakingSetting.min_stake_amount} PENGU | Max:{" "}
-                    {stakingSetting.max_stake_amount} PENGU | APY:{" "}
+                    {stakingSetting.max_stake_amount} PENGU | DIR:{" "}
                     {stakingSetting.apy_percentage}%
                   </p>
                 )}

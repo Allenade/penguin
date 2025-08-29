@@ -148,7 +148,7 @@ export default function StakingSection({
       {/* Staking Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-          <p className="text-sm text-blue-600 dark:text-blue-300">APY</p>
+          <p className="text-sm text-blue-600 dark:text-blue-300">DRI</p>
           <p className="text-xl font-bold text-blue-900 dark:text-blue-100">
             {stakingSettings.apy_percentage}%
           </p>
@@ -225,7 +225,7 @@ export default function StakingSection({
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Staked on {new Date(staking.staked_at).toLocaleDateString()}{" "}
-                    | APY: {staking.apy_at_stake}%
+                    | DRI: {staking.apy_at_stake}%
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">

@@ -71,6 +71,42 @@ const contentSections: ContentSection[] = [
     type: "textarea",
     description: "Second step description",
   },
+  {
+    key: "magic_step_3_title",
+    label: "Step 3 Title",
+    type: "text",
+    description: "Third step title",
+  },
+  {
+    key: "magic_step_3_desc",
+    label: "Step 3 Description",
+    type: "textarea",
+    description: "Third step description",
+  },
+  {
+    key: "magic_step_4_title",
+    label: "Step 4 Title",
+    type: "text",
+    description: "Fourth step title",
+  },
+  {
+    key: "magic_step_4_desc",
+    label: "Step 4 Description",
+    type: "textarea",
+    description: "Fourth step description",
+  },
+  {
+    key: "magic_step_5_title",
+    label: "Step 5 Title",
+    type: "text",
+    description: "Fifth step title",
+  },
+  {
+    key: "magic_step_5_desc",
+    label: "Step 5 Description",
+    type: "textarea",
+    description: "Fifth step description",
+  },
 
   // What Is Section
   {
@@ -160,6 +196,94 @@ const contentSections: ContentSection[] = [
     label: "Investment Amount 5",
     type: "text",
     description: "Fifth investment amount",
+  },
+
+  // Success Stories Section
+  {
+    key: "success_stories_title",
+    label: "Success Stories Title",
+    type: "text",
+    description: "Success Stories section title",
+  },
+  {
+    key: "success_stories_subtitle",
+    label: "Success Stories Subtitle",
+    type: "text",
+    description: "Success Stories subtitle (For Illustration Only)",
+  },
+  {
+    key: "success_story_1_title",
+    label: "Success Story 1 Title",
+    type: "text",
+    description: "First success story title",
+  },
+  {
+    key: "success_story_1_desc",
+    label: "Success Story 1 Description",
+    type: "textarea",
+    description: "First success story description",
+  },
+  {
+    key: "success_story_2_title",
+    label: "Success Story 2 Title",
+    type: "text",
+    description: "Second success story title",
+  },
+  {
+    key: "success_story_2_desc",
+    label: "Success Story 2 Description",
+    type: "textarea",
+    description: "Second success story description",
+  },
+  {
+    key: "success_story_3_title",
+    label: "Success Story 3 Title",
+    type: "text",
+    description: "Third success story title",
+  },
+  {
+    key: "success_story_3_desc",
+    label: "Success Story 3 Description",
+    type: "textarea",
+    description: "Third success story description",
+  },
+
+  // Modal Content
+  {
+    key: "modal_title",
+    label: "Investment Modal Title",
+    type: "text",
+    description: "Modal title when clicking investment button",
+  },
+  {
+    key: "modal_desc",
+    label: "Investment Modal Description",
+    type: "textarea",
+    description: "Modal description text",
+  },
+  {
+    key: "modal_what_happens_title",
+    label: "Modal What Happens Title",
+    type: "text",
+    description: "What happens next section title",
+  },
+  {
+    key: "modal_step_1",
+    label: "Modal Step 1",
+    type: "text",
+    description: "First step in modal",
+  },
+  {
+    key: "modal_step_2",
+    label: "Modal Step 2",
+    type: "text",
+    description: "Second step in modal",
+  },
+  {
+    key: "modal_step_3",
+    label: "Modal Step 3",
+    type: "text",
+    description: "Third step in modal",
   },
 
   // Wallet Address
