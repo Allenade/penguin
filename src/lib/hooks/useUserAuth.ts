@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { useCrypto } from "./useCrypto";
 
 interface UserProfile {
   id: number;
@@ -32,7 +33,9 @@ export function useUserAuth() {
   const [isLoading, setIsLoading] = useState(true); // Keep true for proper auth check
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [welcomeBonusClaimed, setWelcomeBonusClaimed] = useState(false);
   const router = useRouter();
+  const { checkAndGiveWelcomeBonus } = useCrypto();
 
   // Function to fetch user profile from database
   const fetchUserProfile = async (userId: string) => {
@@ -114,6 +117,23 @@ export function useUserAuth() {
             const profile = await fetchUserProfile(session.user.id);
             if (profile) {
               setUserProfile(profile);
+
+              // Check for welcome bonus for new users
+              if (!profile.welcome_bonus_claimed) {
+                const bonusResult = await checkAndGiveWelcomeBonus(
+                  session.user.id
+                );
+                if (bonusResult.success) {
+                  setWelcomeBonusClaimed(true);
+                  // Refresh profile to get updated balance
+                  const updatedProfile = await fetchUserProfile(
+                    session.user.id
+                  );
+                  if (updatedProfile) {
+                    setUserProfile(updatedProfile);
+                  }
+                }
+              }
             }
           } catch (err) {
             // Silently fail, user already has working profile
@@ -173,6 +193,23 @@ export function useUserAuth() {
             const profile = await fetchUserProfile(session.user.id);
             if (profile) {
               setUserProfile(profile);
+
+              // Check for welcome bonus for new users
+              if (!profile.welcome_bonus_claimed) {
+                const bonusResult = await checkAndGiveWelcomeBonus(
+                  session.user.id
+                );
+                if (bonusResult.success) {
+                  setWelcomeBonusClaimed(true);
+                  // Refresh profile to get updated balance
+                  const updatedProfile = await fetchUserProfile(
+                    session.user.id
+                  );
+                  if (updatedProfile) {
+                    setUserProfile(updatedProfile);
+                  }
+                }
+              }
             }
           } catch (err) {
             // Silently fail, user already has working profile
@@ -285,6 +322,7 @@ export function useUserAuth() {
     isLoading,
     user,
     userProfile,
+    welcomeBonusClaimed,
     refreshUserProfile,
     signUp,
     signIn,

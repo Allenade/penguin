@@ -9,7 +9,6 @@ import { X } from "lucide-react";
 import UserDropdown from "@/components/UserDropdown";
 import UserProtectedRoute from "@/components/UserProtectedRoute";
 import { useContent } from "@/lib/hooks/useContent";
-import UserContentEditor from "@/components/UserContentEditor";
 
 export default function HuddlePage() {
   const { getContent } = useContent("huddle");
@@ -67,38 +66,22 @@ export default function HuddlePage() {
             </div>
 
             {/* Main Title */}
-            <UserContentEditor
-              pageName="huddle"
-              sectionName="hero_title"
-              label="Hero Title"
-              type="text"
-              description="Main page title"
-            >
-              <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight">
-                {getContent(
-                  "hero_title",
-                  "Join the Pudgy Penguins Adventure! 🐧✨"
-                )}
-              </h1>
-            </UserContentEditor>
+            <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight">
+              {getContent(
+                "hero_title",
+                "Join the Pudgy Penguins Adventure! 🐧✨"
+              )}
+            </h1>
 
             {/* Welcome Text */}
-            <UserContentEditor
-              pageName="huddle"
-              sectionName="hero_subtitle"
-              label="Hero Subtitle"
-              type="text"
-              description="Welcome message"
-            >
-              <p className="text-xl md:text-2xl text-blue-100 mb-12 max-w-4xl mx-auto leading-relaxed font-semibold">
-                <em>
-                  {getContent(
-                    "hero_subtitle",
-                    "Welcome to Pudgy Penguins Trading!"
-                  )}
-                </em>
-              </p>
-            </UserContentEditor>
+            <p className="text-xl md:text-2xl text-blue-100 mb-12 max-w-4xl mx-auto leading-relaxed font-semibold">
+              <em>
+                {getContent(
+                  "hero_subtitle",
+                  "Welcome to Pudgy Penguins Trading!"
+                )}
+              </em>
+            </p>
           </div>
         </div>
 
@@ -108,49 +91,22 @@ export default function HuddlePage() {
             {/* What Is Section */}
             <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
               <div className="space-y-6">
-                <UserContentEditor
-                  pageName="huddle"
-                  sectionName="magic_title"
-                  label="Magic Section Title"
-                  type="text"
-                  description="How the Magic Works title"
-                >
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                    {getContent("magic_title", "How the Magic Works")}
-                  </h2>
-                </UserContentEditor>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                  {getContent("magic_title", "How the Magic Works")}
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
                     <span className="text-2xl text-purple-400">1.</span>
                     <div>
-                      <UserContentEditor
-                        pageName="huddle"
-                        sectionName="magic_step_1_title"
-                        label="Step 1 Title"
-                        type="text"
-                        description="First step title"
-                      >
-                        <strong className="text-white">
-                          {getContent(
-                            "magic_step_1_title",
-                            "Create an Account"
-                          )}
-                        </strong>
-                      </UserContentEditor>
-                      <UserContentEditor
-                        pageName="huddle"
-                        sectionName="magic_step_1_desc"
-                        label="Step 1 Description"
-                        type="textarea"
-                        description="First step description"
-                      >
-                        <p className="text-blue-100 mt-1">
-                          {getContent(
-                            "magic_step_1_desc",
-                            "Sign up to get your personal wallet address linked to Pengu Stocks."
-                          )}
-                        </p>
-                      </UserContentEditor>
+                      <strong className="text-white">
+                        {getContent("magic_step_1_title", "Create an Account")}
+                      </strong>
+                      <p className="text-blue-100 mt-1">
+                        {getContent(
+                          "magic_step_1_desc",
+                          "Sign up to get your personal wallet address linked to Pengu Stocks."
+                        )}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -300,45 +256,21 @@ export default function HuddlePage() {
                   className="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl hover:scale-105 transition-all duration-500 hover:shadow-3xl animate-float-slow"
                 />
               </div>
-              <UserContentEditor
-                pageName="huddle"
-                sectionName="what_is_title"
-                label="Ready to Take the Plunge Title"
-                type="text"
-                description="Main call-to-action title"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                  {getContent("what_is_title", "Ready to Take the Plunge?")}
-                </h2>
-              </UserContentEditor>
-              <UserContentEditor
-                pageName="huddle"
-                sectionName="what_is_desc"
-                label="Ready to Take the Plunge Description"
-                type="textarea"
-                description="Main call-to-action description"
-              >
-                <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto leading-relaxed">
-                  {getContent(
-                    "what_is_desc",
-                    "Don't just stand on the sidelines—immerse yourself in the world of Pudgy Penguins! Join the journey today, and let's embark on this exciting adventure together."
-                  )}
-                </p>
-              </UserContentEditor>
-              <UserContentEditor
-                pageName="huddle"
-                sectionName="footer_text"
-                label="Footer Text"
-                type="text"
-                description="Footer call-to-action text"
-              >
-                <p className="text-lg text-blue-200 italic mb-8">
-                  {getContent(
-                    "footer_text",
-                    "Join us now and make your mark in the Pudgy Penguins universe! 🌊🐧"
-                  )}
-                </p>
-              </UserContentEditor>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                {getContent("what_is_title", "Ready to Take the Plunge?")}
+              </h2>
+              <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto leading-relaxed">
+                {getContent(
+                  "what_is_desc",
+                  "Don't just stand on the sidelines—immerse yourself in the world of Pudgy Penguins! Join the journey today, and let's embark on this exciting adventure together."
+                )}
+              </p>
+              <p className="text-lg text-blue-200 italic mb-8">
+                {getContent(
+                  "footer_text",
+                  "Join us now and make your mark in the Pudgy Penguins universe! 🌊🐧"
+                )}
+              </p>
             </div>
 
             {/* Investment Buttons */}

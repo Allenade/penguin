@@ -21,7 +21,8 @@ export default function DashboardPage() {
     type: "success" as "success" | "error",
   });
 
-  const { user, userProfile, refreshUserProfile } = useUserAuth();
+  const { user, userProfile, welcomeBonusClaimed, refreshUserProfile } =
+    useUserAuth();
   const router = useRouter();
   const { getAssetPrice } = useCryptoPrices();
   const {
@@ -38,13 +39,22 @@ export default function DashboardPage() {
   // Show welcome toast when user is loaded
   useEffect(() => {
     if (user && userProfile) {
-      setToast({
-        show: true,
-        message: `Welcome back, ${userProfile.wallet_username}!`,
-        type: "success",
-      });
+      // Check if welcome bonus was just claimed
+      if (welcomeBonusClaimed) {
+        setToast({
+          show: true,
+          message: `🎉 Welcome! You've received 10,000 PENGU bonus!`,
+          type: "success",
+        });
+      } else {
+        setToast({
+          show: true,
+          message: `Welcome back, ${userProfile.wallet_username}!`,
+          type: "success",
+        });
+      }
     }
-  }, [user, userProfile]);
+  }, [user, userProfile, welcomeBonusClaimed]);
 
   // Fetch user staking data when user is available
   useEffect(() => {

@@ -244,6 +244,22 @@ export function useCrypto() {
     }
   };
 
+  // Check and give welcome bonus automatically (for new users)
+  const checkAndGiveWelcomeBonus = async (userId: string) => {
+    try {
+      const { data, error } = await (supabase as any).rpc(
+        "check_and_give_welcome_bonus",
+        { user_uuid: userId }
+      );
+
+      if (error) throw error;
+      return { success: data };
+    } catch (err) {
+      console.error("Error checking welcome bonus:", err);
+      return { success: false, error: err };
+    }
+  };
+
   // Stake tokens
   const stakeTokens = async (
     userId: string,
@@ -1063,6 +1079,7 @@ export function useCrypto() {
     fetchAllWithdrawalRequests,
     updateWithdrawalRequestStatus,
     claimWelcomeBonus,
+    checkAndGiveWelcomeBonus,
     stakeTokens,
     unstakeTokens,
     getDepositAddress,
