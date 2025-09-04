@@ -25,3 +25,4 @@ CREATE POLICY "Allow public access to withdrawal_requests" ON withdrawal_request
     FOR ALL USING (true);
 
 
+

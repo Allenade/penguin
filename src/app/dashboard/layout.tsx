@@ -38,7 +38,7 @@ export default function DashboardLayout({
 
   const navItems = [
     { name: "Dashboard", icon: Home, href: "/dashboard" },
-    { name: "PENGU Holdings", icon: Plus, href: "/dashboard/holdings" },
+    { name: "Portfolio", icon: Plus, href: "/dashboard/holdings" },
     { name: "Staking", icon: CircuitBoard, href: "/dashboard/staking" },
     { name: "Deposit", icon: Plus, href: "/dashboard/deposit" },
     { name: "Withdraw", icon: Minus, href: "/dashboard/withdraw" },
