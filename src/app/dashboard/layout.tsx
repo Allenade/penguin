@@ -18,7 +18,6 @@ import {
   Bitcoin,
   X,
   ArrowLeft,
-  FileText,
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -42,7 +41,6 @@ export default function DashboardLayout({
     { name: "Staking", icon: CircuitBoard, href: "/dashboard/staking" },
     { name: "Deposit", icon: Plus, href: "/dashboard/deposit" },
     { name: "Withdraw", icon: Minus, href: "/dashboard/withdraw" },
-    { name: "My Content", icon: FileText, href: "/dashboard/my-content" },
   ];
 
   const isActiveRoute = (href: string) => {
