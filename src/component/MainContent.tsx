@@ -601,7 +601,7 @@ export default function MainContent() {
                 onClick={() => handleMenuClick("beta-access")}
                 className="block w-full text-left px-4 py-3 text-gray-800 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-150 font-semibold cursor-pointer"
               >
-                BETA ACCESS
+                CLAIM SBT{" "}
               </button>
 
               <button
